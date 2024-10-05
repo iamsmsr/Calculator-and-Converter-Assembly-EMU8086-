@@ -1,0 +1,965 @@
+.MODEL SMALL
+.STACK 100H
+.DATA
+    ; DEFINE YOUR VARIABLES 
+    
+    ;#######################################################################################################
+    ;######################################################################################################  
+    
+    main1 db  ":::::::::::::CALCULATOR AND CONVERTER::::::::::::::$" 
+    main2 db  "Option 1: CALCULATOR$"
+    main3 db  "Option 2: CURRENCY CONVERTER$"
+    main4 db  "Option 3: LENGTH CONVERTER$" 
+    main5 db  "SELECT OPTION: $"
+    
+    ;#######################################################################################################
+    ;######################################################################################################
+                             
+    var db  ":::::::::::::WELCOME TO CALCULATOR::::::::::::::::::$"
+    var2 db ":::::::::::::::::::::::::::::::::::::::::::::::::::$"   
+    var3 db "Enter first  number: $"
+    var4 db "Enter second number: $" 
+    var5 db "Enter arithmetic symbol(+,-,*,/): $"
+    var6 db ":::::::::::::::Performing Addition:::::::::::::::::$"
+    var7 db "::::::::::::Performing Substraction::::::::::::::::$"
+    var8 db "::::::::::::Performing Multiplication::::::::::::::$"
+    var9 db ":::::::::::::::Performing Division:::::::::::::::::$"
+    ;var10 db ":::::::::::::::Performing Modulus::::::::::::::::::$"
+    var11 db "Answer: $" 
+    var12 db "System is not designed for more than 6 digit multiplication output.$"   
+    var13 db "Quotient : $"
+    var14 db "Reaminder: $" 
+    var15 db "Answer (first/second): $"
+    arr1 dw 4 dup(30h) 
+    count dw 0d   
+    arr2 dw 1000, 100, 10, 1 
+    arr3 dw 100, 10, 1
+    arr4 dw 10,1
+    arr5 dw 1
+    digit1 dw 0d
+    digit11 dw 0d
+    digit12 dw 0d 
+    symbol db ?  
+    answer dw 0d    ;for add, sub, mul(8bit)
+    answer2 dw 0d   ;for mul (16bit)
+    quotient dw 0d  ;for div
+    remainder dw 0d ;for div    
+    
+    ;######################################################################################################
+    ;######################################################################################################
+    curr dw "::::::::::::::CURRENCY CONVERTER::::::::::::::::::$"
+    curr_flag dw 0  ;1 means on and 0 means off, will be used to taking input 
+     
+    opt_1 dw "Option 1: USD = BDT  $"    ;1usd = 110bdt
+    opt_2 dw "Option 2: POUND = BDT$"     ;1pound = 137bdt
+    opt_3 dw "Option 3: EURO = BDT$"       ;1euro = 117bdt
+    opt_4 dw "Option 4: RIYAL = BDT$"        ;1riyal = 29ndt
+    opt_5 dw "Option 5: CAD = BDT  $"        ;1 canadian dollar = 80bdt
+    input1 db 0
+    input2 db 0            
+    curr_1 dw "SELECT OPTION: $"
+    curr_2 dw "Option 1: TO BDT....$"
+    curr_3 dw "Option 2: FROM BDT..$"
+    curr_4 dw ":::::::::::::CONVERTING:::::::::::::::::::::::::$" 
+    curr_5 dw "Current Rate: 1 USD = 110 BDT$"
+    curr_6 dw "Current Rate: 1 POUND = 137 BDT$"
+    curr_7 dw "Current Rate: 1 EURO = 117 BDT$"
+    curr_8 dw "Current Rate: 1 RIYAL = 29 BDT$"
+    curr_9 dw "Current Rate: 1 CAD = 80 BDT$"
+    curr_10 dw "Entered currency: $"
+    curr_11 dw "After converting: $"
+    curr_12 dw " BDT   (fractions are ignored here)$"
+    curr_13 dw " USD   (fractions are ignored here)$"
+    curr_14 dw " POUND   (fractions are ignored here)$"
+    curr_15 dw " EURO   (fractions are ignored here)$"
+    curr_16 dw " RIYAL   (fractions are ignored here)$"
+    curr_17 dw " CAD   (fractions are ignored here)$"  
+   
+    
+    ;curr_18 dw "::::::::::::::::::::::::::::::::::::::::::::::::::$" 
+    curr_temp1 dw 0 ; for temp use
+                                                                        
+    ;######################################################################################################
+    ;###################################################################################################### 
+    
+    
+    len dw "::::::::::::::LENGTH CONVERTER::::::::::::::::::$"
+    len_flag dw 0  ;1 means on and 0 means off, will be used to taking input 
+     
+    opt_11 dw "Option 1: Meter = Centimeter  $"       ;1m = 100 cm
+    opt_22 dw "Option 2: Kilo meter = Meter$"         ;1km = 1000 m
+    opt_33 dw "Option 3: Centimeter = Milimeter$"     ;1cm = 10 mm
+    opt_44 dw "Option 4: Feet = Inch$"                ;1 ft = 12 inch
+    opt_55 dw "Option 5: Meter = Milimeter  $"        ;1m = 1000mm
+    input11 db 0
+    input22 db 0            
+    len_1 dw "SELECT OPTION: $"
+    len_2 dw "Option 1: LEFT TO RIGHT....$"
+    len_3 dw "Option 2: RIGHT TO LEFT..$"
+    len_4 dw ":::::::::::::CONVERTING:::::::::::::::::::::::::$" 
+    len_5 dw "1 Meter = 100 Centimeter$"
+    len_6 dw "1 Kilometer = 1000 Meter$"
+    len_7 dw "1 Centimeter = 10 Mili meter$"
+    len_8 dw "1 Feet = 12 Inch$"
+    len_9 dw "1 Meter = 1000 Mili meter$"
+    ;curr_10 dw "Entered currency: $"
+    ;curr_11 dw "After converting: $"
+    len_12 dw " Meter$"
+    len_13 dw " Kilometer$"
+    len_14 dw " Feet$"
+    len_15 dw " Centimeter$"
+    len_16 dw " Mili meter$"
+    len_17 dw " Inch$"  
+   
+    
+    curr_18 dw "::::::::::::::::::::::::::::::::::::::::::::::::::$" 
+    len_temp1 dw 0 ; for temp use
+                                                                        
+    ;######################################################################################################
+    ;######################################################################################################
+    
+    
+    
+.CODE  
+    PrintNextLine PROC
+        mov ah, 2
+        mov dl, 0dh
+        int 21h
+        mov dl, 0ah
+        int 21h 
+        RET
+    PrintNextLine ENDP
+    
+    possibility1 PROC  
+        lea si, arr1
+        lea di, arr2
+        mov cx, 4  
+        loop2: 
+        mov bx, [si] 
+        mov ax, [di] 
+        sub bx, 30h
+        mul bx
+        add digit1, ax
+        add si, 2
+        add di, 2
+        loop loop2  
+        RET
+    possibility1 ENDP  
+    
+    possibility2 PROC
+        lea si, arr1
+        lea di, arr3
+        mov cx, 3  
+        loop3: 
+        mov bx, [si] 
+        mov ax, [di] 
+        sub bx, 30h
+        mul bx
+        add digit1, ax
+        add si, 2
+        add di, 2
+        loop loop3  
+        RET
+    possibility2 ENDP  
+        
+    possibility3 PROC
+        lea si, arr1
+        lea di, arr4
+        mov cx, 2  
+        loop4: 
+        mov bx, [si] 
+        mov ax, [di] 
+        sub bx, 30h
+        mul bx
+        add digit1, ax
+        add si, 2
+        add di, 2
+        loop loop4  
+        RET
+    possibility3 ENDP 
+    
+    possibility4 PROC
+        lea si, arr1
+        lea di, arr5
+        mov cx, 1  
+        loop5: 
+        mov bx, [si] 
+        mov ax, [di] 
+        sub bx, 30h
+        mul bx
+        add digit1, ax
+        add si, 2
+        add di, 2
+        loop loop5 
+        RET
+    possibility4 ENDP 
+    
+    taking_input PROC  
+        mov cx, 4     ; implicit loop for taking the first max 4 digit
+        lea si, arr1
+        loop1:  
+        mov ah, 1
+        int 21h   
+        cmp al, 0dh   ; if enter is pressed it wont take any more input
+        je exit
+        mov [si], al 
+        add count, 1
+        add si, 2
+        loop loop1  
+        exit: 
+        RET
+    taking_input ENDP  
+    
+    final_output PROC 
+          
+        cmp answer, 0  ; if the answer is zero
+        je here2
+        xor dx, dx     ;clearing dx for holding quotiont
+        mov ax, answer
+        mov bx, 10     ;bl doesnot work for 4 digit
+        mov count, 0   ; it will store the length of answer
+          
+        output:        ;pushing in the stack           
+        cmp ax, 0
+        je here 
+        inc count       
+        div bx
+        push dx        
+        xor dx, dx     ;clearing dx for holding quotiont           
+        loop output
+         
+        here:  
+        mov cx, count            
+        output1:       ;popping from the stack
+        pop dx   
+        add dl, 30h
+        mov ah, 2
+        int 21h
+        loop output1
+        RET  
+        
+        here2:         ;when answer is zero
+        mov dx, answer
+        mov ah, 2
+        add dx, 30h
+        int 21h            
+        
+        RET   
+    final_output ENDP  
+    
+    func1 PROC           ;for printing :::::::::::::::::::::::
+        call PrintNextLine
+        lea dx, curr_18
+        mov ah, 9
+        int 21h
+        call PrintNextLine
+        RET
+    func1 ENDP
+
+    MAIN PROC
+        MOV AX, @DATA
+        MOV DS, AX  
+       
+        
+        ; YOUR CODE STARTS HERE    
+        
+        
+    ;######################################################################################################
+    ;######################################################################################################  
+    
+        lea dx, main1
+        mov ah, 9
+        int 21h
+        
+        CALL PrintNextLine
+        lea dx, main2
+        mov ah, 9
+        int 21h
+                 
+        CALL PrintNextLine         
+        lea dx, main3
+        mov ah, 9
+        int 21h
+        
+        CALL PrintNextLine
+        lea dx, main4
+        mov ah, 9
+        int 21h  
+        
+        CALL PrintNextLine
+        lea dx, main5
+        mov ah, 9
+        int 21h
+        
+        mov ah,1
+        int 21h  
+        
+        sub al,30h
+        mov input1, al
+        
+        CALL func1
+       
+        
+        cmp input1,1 
+        je CALCULATOR 
+        cmp  input1,2
+        je CURRENCY_CONVERTER 
+        cmp  input1,3
+        je LENGTH_CONVERTER  
+        
+        
+        
+       
+    ;######################################################################################################
+    ;######################################################################################################
+        
+        CALCULATOR:
+        
+        lea dx, var
+        mov ah, 9
+        int 21h       
+        
+        CALL PrintNextLine  ; Call the subroutine to print the next line
+        
+        lea dx, var2
+        mov ah, 9
+        int 21h 
+        
+        CALL PrintNextLine  ; Call the subroutine to print the next line   
+        
+        ;handling first number    
+        
+        take_input:       ;this is for currency converter  and length
+        
+        lea dx, var3
+        mov ah, 9
+        int 21h   
+        
+        
+        
+        
+        
+        
+        CALL taking_input ;taking input of the first number
+        
+        CALL PrintNextLine 
+        
+        cmp count, 4 
+        je p1 
+        cmp count, 3
+        je p2
+        cmp count, 2
+        je p3
+        cmp count, 1
+        je p4   
+        
+        p1:   
+        CALL possibility1
+        jmp exit1 
+        p2:
+        CALL possibility2 
+        jmp exit1 
+        p3:
+        CALL possibility3 
+        jmp exit1
+        p4:
+        CALL possibility4 
+        jmp exit1
+        exit1:  
+        
+        mov bx, digit1  ;used as temp variable for swapping
+        mov digit11, bx  
+        
+        cmp curr_flag, 1h     ;it will be used to take input for currency converter
+        je  to_input1      
+        
+        cmp len_flag, 1           ;it will be used to take input for length converter
+        je to_input11
+        
+        ;handling second number  
+        
+        lea dx, var4
+        mov ah, 9
+        int 21h 
+        mov count, 0  ;reseting count
+        
+        CALL taking_input ;input for the second number  
+        
+        CALL PrintNextLine 
+        mov digit1, 0d ;reseting  digit1  
+        
+        cmp count, 4 
+        je p11 
+        cmp count, 3
+        je p22
+        cmp count, 2
+        je p33
+        cmp count, 1
+        je p44   
+        
+        p11:   
+        CALL possibility1
+        jmp exit2 
+        p22:
+        CALL possibility2 
+        jmp exit2 
+        p33:
+        CALL possibility3 
+        jmp exit2
+        p44:
+        CALL possibility4 
+        jmp exit2
+        exit2:
+        
+  
+        
+        mov bx, digit1  ;used as temp variable for swapping
+        mov digit12, bx  
+        
+        lea dx, var5    ;taking input of symbol
+        mov ah, 9
+        int 21h
+        
+        mov ah, 1
+        int 21h
+        mov symbol, al 
+        
+        CALL PrintNextLine 
+        
+        ;performing part   
+        
+        ;addition
+        cmp symbol, 2bh  
+        je addd
+        ;substraction 
+        cmp symbol, 2dh
+        je subb
+        ;multiplication
+        cmp symbol, 2ah
+        je mull
+        ;division     
+        cmp symbol, 2fh
+        je divv
+
+        
+        ;addition
+        addd:  
+        lea dx, var6    
+        mov ah, 9
+        int 21h
+        mov ax, digit11
+        mov cx, digit12
+        add ax, cx
+        mov answer, ax  
+        
+         
+        jmp exit3
+          
+        ;substraction 
+        subb: 
+        lea dx, var7    
+        mov ah, 9
+        int 21h   
+        mov ax, digit11
+        mov cx, digit12
+        sub ax, cx
+        mov answer, ax  
+        jmp exit3
+       
+        
+        ;multiplication
+        mull: 
+        lea dx, var8    
+        mov ah, 9
+        int 21h 
+        mull_1:          ;for currency converter
+        mov ax, digit11
+        mov bx, digit12
+        mul bx
+        mov answer, ax   ;for lower 16bit
+        mov answer2, dx  ; for higher 16 bit
+        cmp answer2, 0    ;for 5 digit output
+        jne exit3_1_here    
+        
+        cmp curr_flag, 1h ;for currency converter 
+        je to_curr1  
+        
+        
+        cmp len_flag, 1h ;for length converter 
+        je to_len1
+        
+        jmp exit3
+        
+        ;division     
+        divv:   
+        xor dx, dx
+        xor ax, ax  
+        mov ax, digit11     ;16bit dividend
+        mov bx, digit12     ;16 bit divisor will be converted
+        div bx              ;8bit  divisor converted from 16 bit
+        mov quotient, ax
+        mov remainder, dx 
+        
+        cmp curr_flag, 1h ;for currency converter 
+        je to_curr3   
+       
+        cmp len_flag, 1h ;for currency converter 
+        je to_len3
+               
+        jmp exit3_1
+        
+
+        
+        exit3:              ;for output of add and sub and mul
+        call PrintNextLine   
+        lea dx, var11    
+        mov ah, 9
+        int 21h            
+        ;printing output            
+        call final_output 
+        
+        cmp curr_flag, 1h  ;for currency converter 
+        je to_curr2  
+        
+        cmp len_flag, 1h  ;for length converter 
+        je to_len2
+        
+        jmp exit3_2  
+        
+        exit3_1:            ;for output of div
+        lea dx, var15    
+        mov ah, 9
+        int 21h 
+                 
+        call PrintNextLine  
+        lea dx, var13    
+        mov ah, 9
+        int 21h  
+        
+        xor ax, ax
+        mov ax, quotient
+        ; mov ah, 0
+        mov answer, ax
+        call final_output
+        
+        call PrintNextLine 
+         
+        lea dx, var14    
+        mov ah, 9
+        int 21h  
+        
+        xor ax, ax
+        mov ax, remainder
+        ;mov ah, 0
+        mov answer, ax
+        call final_output
+        
+        jmp exit3_2
+                
+        
+        
+        exit3_1_here:    ;5 digit multiplication error msg
+        call PrintNextLine 
+        lea dx, var12    
+        mov ah, 9
+        int 21h    
+        
+        cmp curr_flag, 0001h ;for currency converter 
+        jmp to_curr2
+        
+        jmp exit3_2
+         
+ 
+        
+        
+    ;######################################################################################################
+    ;######################################################################################################
+        
+        CURRENCY_CONVERTER:  
+        
+        mov curr_flag, 1
+           
+        call PrintNextLine
+        lea dx, curr
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, opt_1
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, opt_2
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, opt_3
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, opt_4
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, opt_5
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, curr_1
+        mov ah, 9
+        int 21h
+        
+        ;first input for selecting currency option 
+        
+        xor dx,dx
+        mov ah, 1
+        int 21h 
+        sub al, 30h
+        mov input1, al 
+        
+        call func1
+        
+        lea dx, curr_2
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, curr_3
+        mov ah, 9
+        int 21h
+        
+        
+        
+        call PrintNextLine
+        lea dx, curr_1
+        mov ah, 9
+        int 21h
+        
+        ;second input for form bdt or to bdt 
+        xor dx,dx
+        mov ah, 1
+        int 21h   
+        sub al, 30h
+        mov input2, al  
+        
+        call func1  
+        
+        jmp take_input   ;it will take 4 digit dynamic input from the calculator input section 
+        to_input1:       ; the input will be in digit11
+        
+        ;calculation part     
+        
+        cmp input1 , 1h
+        mov digit12, 110
+        je curr_here1
+        cmp input1 , 2h
+        mov digit12, 137
+        je curr_here1
+        cmp input1 , 3h
+        mov digit12, 117
+        je curr_here1
+        cmp input1 , 4h
+        mov digit12, 29
+        je curr_here1
+        cmp input1 , 5h
+        mov digit12, 80
+        je curr_here1
+                     
+        curr_here1:
+                                        ; for to bdt or mutiplication
+        cmp input2, 1        
+        je mull_1                       ;for from bdt or division
+        cmp input2, 2         
+        je divv 
+        
+        to_curr1:
+        
+        call PrintNextLine
+        lea dx, curr_4
+        mov ah, 9
+        int 21h     
+        call PrintNextLine
+        
+        cmp input1 , 1h
+        lea dx , curr_5
+        je curr_here2
+        cmp input1 , 2h
+        lea dx , curr_6
+        je curr_here2
+        cmp input1 , 3h
+        lea dx , curr_7
+        je curr_here2
+        cmp input1 , 4h
+        lea dx , curr_8
+        je curr_here2
+        cmp input1 , 5h
+        lea dx , curr_9 
+        je curr_here2 
+        
+        curr_here2:
+        mov ah,9
+        int 21h
+        
+        jmp exit3  
+        
+        to_curr2:  
+        cmp input2, 2
+        je curr_here3          ;for  bdt output
+        lea dx, curr_12 
+        mov ah, 9
+        int 21h 
+        jmp exit3_2
+        
+        ;from BDT
+        to_curr3:                ;it will come form the divide part
+        mov ax, quotient
+        mov answer, ax
+        jmp to_curr1   
+        
+        curr_here3:             ;FOR THE FROM BDT PART
+        
+        cmp input1 , 1h
+        lea dx , curr_13
+        je curr_here4
+        cmp input1 , 2h
+        lea dx , curr_14
+        je curr_here4
+        cmp input1 , 3h
+        lea dx , curr_15
+        je curr_here4
+        cmp input1 , 4h
+        lea dx , curr_16
+        je curr_here4
+        cmp input1 , 5h
+        lea dx , curr_17 
+        je curr_here4 
+        
+        curr_here4:
+        mov ah, 9
+        int 21h 
+        jmp exit3_2
+        
+      
+              
+    ;######################################################################################################
+    ;######################################################################################################
+    
+        LENGTH_CONVERTER:
+        
+        mov len_flag, 1
+         
+         
+        call PrintNextLine
+        lea dx, len
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, opt_11
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, opt_22
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, opt_33
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, opt_44
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, opt_55
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, len_1
+        mov ah, 9
+        int 21h
+        
+        ;first input 
+        
+        xor dx,dx
+        mov ah, 1
+        int 21h 
+        sub al, 30h
+        mov input1, al 
+        
+        call func1
+        
+        lea dx, len_2
+        mov ah, 9
+        int 21h
+        
+        call PrintNextLine
+        lea dx, len_3
+        mov ah, 9
+        int 21h
+        
+        
+        
+        call PrintNextLine
+        lea dx, len_1
+        mov ah, 9
+        int 21h
+        
+        ;second input 
+        xor dx,dx
+        mov ah, 1
+        int 21h   
+        sub al, 30h
+        mov input2, al  
+        
+        call func1 
+        
+        jmp take_input   ;it will take 4 digit dynamic input from the calculator input section 
+        to_input11:       ; the input will be in digit11 
+        
+        
+        ;calculation part     
+        
+        cmp input1 , 1h
+        mov digit12, 100
+        je len_here1
+        cmp input1 , 2h
+        mov digit12, 1000
+        je len_here1
+        cmp input1 , 3h
+        mov digit12, 10
+        je len_here1
+        cmp input1 , 4h
+        mov digit12, 12
+        je len_here1
+        cmp input1 , 5h
+        mov digit12, 1000
+        je len_here1
+                     
+        len_here1:   
+        
+        
+        cmp input2, 1        
+        je mull_1                        ;for left to right
+        cmp input2, 2                   ;for right to left
+        je divv 
+        
+        
+        
+        to_len1:
+        
+        call PrintNextLine
+        lea dx, curr_4
+        mov ah, 9
+        int 21h     
+        call PrintNextLine 
+        
+        cmp input1 , 1h
+        lea dx , len_5
+        je len_here2
+        cmp input1 , 2h
+        lea dx , len_6
+        je len_here2
+        cmp input1 , 3h
+        lea dx , len_7
+        je len_here2
+        cmp input1 , 4h
+        lea dx , len_8
+        je len_here2
+        cmp input1 , 5h
+        lea dx , len_9 
+        je len_here2 
+        
+        len_here2:
+        mov ah,9
+        int 21h 
+        
+        jmp exit3 
+        
+        
+        
+        to_len2:  
+        cmp input2, 1        ;for left to right
+        je len_here3
+        
+        cmp input2,2          ;for right to lef
+        je len_here5          
+       
+       
+         ;from right to left
+        to_len3:                ;it will come form the divide part
+        mov ax, quotient
+        mov answer, ax
+        jmp to_len1  
+        
+        len_here3:             ;FOR the left to rigt
+        
+        cmp input1 , 1h
+        lea dx , len_15
+        je len_here4
+        cmp input1 , 2h
+        lea dx ,  len_12
+        je len_here4
+        cmp input1 , 3h
+        lea dx , len_16
+        je len_here4
+        cmp input1 , 4h
+        lea dx , len_17
+        je len_here4
+        cmp input1 , 5h
+        lea dx , len_16 
+        je len_here4  
+        
+        len_here5:                    ;for RIGHT TO LEFT
+        cmp input1 , 1h
+        lea dx , len_12
+        je len_here4
+        cmp input1 , 2h
+        lea dx ,  len_13
+        je len_here4
+        cmp input1 , 3h
+        lea dx , len_15
+        je len_here4
+        cmp input1 , 4h
+        lea dx , len_14
+        je len_here4
+        cmp input1 , 5h
+        lea dx , len_12 
+        je len_here4 
+        
+        len_here4:
+        mov ah, 9
+        int 21h 
+        jmp exit3_2  
+        
+        
+    
+    
+    
+    
+    
+    
+    ;######################################################################################################
+    ;######################################################################################################        
+        exit3_2: 
+        
+        call func1
+           
+        ; YOUR CODE ENDS HERE
+        
+        MOV AX, 4C00H
+        INT 21H 
+        
+    MAIN ENDP
+
+    END MAIN
